@@ -321,15 +321,7 @@ def restore_F(T, F, v):
 		TNodes.add(node_A)
 		TNodes.add(node_B)	
 
-	#initialize object to store edges to pop_edges
-	pop_edges = set()
-
-	#populate pop_edges
-	for (old, new) in F:
-	 	if((new not in TNodes) and (old == v)):
-			pop_edges.add((old, new))
-
-	return pop_edges	
+	return {(old, new) for old, new in F if ((new not in TNodes) and (old == v))}	
 
 # Name:        populate_F(T, F, F_del, del_idx, F_sav, sav_idx, pop_edges, v)
 # Description: populate F with all edges removed in update_F() - line 10
@@ -420,20 +412,11 @@ def bridge_test(G, L, v):
 	# store descendents of v in L graph as D
 	D = nx.descendants(L_graph, v)
 
-	# will contain all edges of G pointing at v
-	w_nb_v = set() # w neighbor v
-
-	for (x,y) in G.edges():
-		if(y == v):
-			w_nb_v.add(x)
-
+	w_nb_v = {x for x, y in G.edges() if (y == v)}
 	#check if w_nb_v and D overlap
 	set_diff = w_nb_v - D	
 
-	if len(set_diff) == 0:
-		return True
-	
-	return False	
+	return len(set_diff) == 0	
 
 # Name: 	   reconstruct(G, F, FF)
 # Description: restores edges removed from graph (FF) back into G and F
@@ -448,8 +431,8 @@ def reconstruct(G, F, FF):
 	C = copy(FF) #so object isn't manipulated inside own for loop
 
 	#pop each edge from FF and add to G and F
-	for edges in C:
-		chosen = FF.pop() 
+	for _ in C:
+		chosen = FF.pop()
 		F.append(chosen)
 		G.add_edge(*chosen)
 
@@ -462,15 +445,15 @@ def reconstruct(G, F, FF):
 def create_folder():
 
 	#create blockfiles folder
-    newpath = r'blockfiles'
-    if not os.path.exists(newpath):
-        os.makedirs(newpath)
-    
-    #empty folder
-    dirPath  = "blockfiles"
-    fileList = os.listdir(dirPath)
-    for fileName in fileList:
-        os.remove(dirPath+"/"+fileName)
+	newpath = r'blockfiles'
+	if not os.path.exists(newpath):
+	    os.makedirs(newpath)
+
+	#empty folder
+	dirPath  = "blockfiles"
+	fileList = os.listdir(dirPath)
+	for fileName in fileList:
+		os.remove(f"{dirPath}/{fileName}")
 
 # Name:        dump(filename, data)
 # Description: Does a pickle dump of object 'data' into file 'filename'.
@@ -479,10 +462,8 @@ def create_folder():
 # Output:      None
 def dump(filename, data):
 
-	#open file as a writable binary file, perform dump, close it
-    fileObject   = open(filename,'wb+')            
-    pickle.dump(data,fileObject)
-    fileObject.close()
+	with open(filename,'wb+') as fileObject:
+		pickle.dump(data,fileObject)
 
 # Name:        expand_graph(G, n)
 # Description: Expands the root node to the neighboring nodes n times

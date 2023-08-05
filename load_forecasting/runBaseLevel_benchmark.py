@@ -41,12 +41,12 @@ class runModels:
 
     def joinAllResults(self, path, nUsers, stepAhead):
         user = 0
-        key = str(user) + '_' + str(stepAhead) + 'h'
+        key = f'{user}_{str(stepAhead)}h'
         df_train_main = pd.read_csv((path + str(stepAhead) + 'h_user' + str(user) + '_train.csv'), index_col=0)
         df_test_main = pd.read_csv((path + str(stepAhead) + 'h_user' + str(user) + '_test.csv'), index_col=0)
 
         for user in xrange(1, nUsers):
-            key = str(user) + '_' + str(stepAhead) + 'h'
+            key = f'{str(user)}_{str(stepAhead)}h'
 
             df_test = pd.read_csv((path + str(stepAhead) + 'h_user' + str(user) + '_test.csv'), index_col=0)
             df_test_main[key] = df_test[key]
@@ -61,7 +61,7 @@ class runModels:
         os.remove((path + str(stepAhead) + 'h_user0_train.csv'))
 
     def createExportFileUser(self, nHour, nTrain, user, hour, y_forecast_te, y_forecast_tr, path):
-        key = str(user) + '_' + str(hour) + 'h'
+        key = f'{str(user)}_{str(hour)}h'
         index = nTrain + nHour + (hour - 1)
         df_ = pd.DataFrame(index=self.dates[index:], columns=[key])
         df_[key] = y_forecast_te
@@ -73,12 +73,10 @@ class runModels:
         df_.to_csv(path + '_train.csv', float_format='%.3f')
 
     def exportTrainTest(self, dates, nTrain, y_actual):
-        listCol = []
         y_actual_tr = y_actual[:nTrain, :]
         y_actual_te = y_actual[nTrain:, :]
         nUsers = y_actual_te.shape[1]
-        for user in xrange(nUsers):
-            listCol.append(user)
+        listCol = list(xrange(nUsers))
         df_train = pd.DataFrame(index=dates[:nTrain], columns=listCol)
         df_test = pd.DataFrame(index=dates[nTrain:], columns=listCol)
         for user in xrange(nUsers):

@@ -48,16 +48,16 @@ def getErrors(prediction, actual):
 	mpe_err = mpe(prediction, actual)
 	mape_err = mape(prediction,actual)
 	cv_err = cv(prediction,actual)
-	
-	
+
+
 	print("MPE is",mpe_err)
 	print("MAPE is",mape_err)
 	print("CV is",cv_err)
 	# print("RMSE is",rmse_err)
-	
-	mpe_err = str(mpe_err)[0:10]
-	mape_err = str(mape_err)[0:10]
-	cv_err = str(cv_err)[0:10]
+
+	mpe_err = str(mpe_err)[:10]
+	mape_err = str(mape_err)[:10]
+	cv_err = str(cv_err)[:10]
 
 	# print(mpe_err, type(mpe_err))
 

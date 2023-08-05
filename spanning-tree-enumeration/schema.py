@@ -15,15 +15,14 @@ def make_schema(G):
 	#store all edges (A, B) where A < B in list exploredEdge
 	for (A, B) in G.edges(): 
 
-		if(A > B): 
+		if (A > B): 
 			if((B, A) not in exploredEdge):
 				lengthString = lengthString + 1
 				exploredEdge.append((B, A))
 
-		else:	
-			if((A, B) not in exploredEdge):
-				lengthString = lengthString + 1
-				exploredEdge.append((A, B))
+		elif ((A, B) not in exploredEdge):
+			lengthString = lengthString + 1
+			exploredEdge.append((A, B))
 
 	return exploredEdge, lengthString
 
@@ -34,7 +33,5 @@ def make_schema(G):
 # Output:      None
 def dump(filename, data):
 
-	#open file as a writable binary file, perform dump, close it
-    fileObject   = open(filename,'wb+')            
-    pickle.dump(data,fileObject)
-    fileObject.close()
+	with open(filename,'wb+') as fileObject:
+		pickle.dump(data,fileObject)

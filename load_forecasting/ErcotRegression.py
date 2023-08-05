@@ -11,7 +11,6 @@ class ErcotRegression:
         self.model = linear_model.LinearRegression(copy_X=True)
         self.features = None
         self.window_size = 168
-        pass
 
     def generate_x(self, X, dates, stepAhead):
         """
@@ -85,17 +84,13 @@ class ErcotRegression:
 
         season_dow_list = []
         for season in season_list:
-            for dow in dow_list:
-                season_dow_list.append(season + dow)
-
+            season_dow_list.extend(season + dow for dow in dow_list)
         df_season_dow = pd.DataFrame(index=range(number_of_samples), columns=season_dow_list)
 
         for season in season_list:
             for dow in dow_list:
                 df_season_dow[season + dow] = [df_dow.ix[index, dow] * df_seasons.ix[index, season] for index in
                                                df_dow.index]
-
-        pass
 
         recent_daily_temperature = X[:, range(self.window_size - 24, self.window_size)]
         recent_daily_start_hour = (dates.hour - stepAhead + 1) % 24
@@ -179,7 +174,7 @@ class ErcotRegression:
         for temp_condition in ['Hot', 'Mild', 'Cold']:
             for tod in ['Morn', 'Aft', 'Eve']:
                 df_time_of_day[temp_condition + tod + 'DB'] = df_weather_based_day_types[temp_condition + 'Day'] * \
-                                                              df_dbs[
+                                                                  df_dbs[
                                                                   tod + 'DB']
 
         for temp_condition in ['Hot', 'Cold']:
@@ -239,12 +234,13 @@ class ErcotRegression:
     # July 4th: July 4th
     @staticmethod
     def is_july_4th(date_time):
-        if date_time.month == 7 and date_time.day == 4 and date_time.isoweekday() not in (6, 7):
-            return 1
-        elif date_time.month == 7 and date_time.day == 3 and date_time.isoweekday() == 5:
-            return 1
-        elif date_time.month == 7 and date_time.day == 5 and date_time.isoweekday() == 1:
-            return 1
+        if date_time.month == 7:
+            if date_time.day == 4 and date_time.isoweekday() not in (6, 7):
+                return 1
+            elif date_time.day == 3 and date_time.isoweekday() == 5:
+                return 1
+            elif date_time.day == 5 and date_time.isoweekday() == 1:
+                return 1
         return 0
 
     # Labor day: 1st monday in September
@@ -271,24 +267,27 @@ class ErcotRegression:
     # Christmas day: Dec 25th
     @staticmethod
     def is_christmas(date_time):
-        if date_time.month == 12 and date_time.day == 25 and date_time.isoweekday() not in (6, 7):
-            return 1
-        elif date_time.month == 12 and date_time.day == 24 and date_time.isoweekday() == 5:
-            return 1
-        elif date_time.month == 12 and date_time.day == 26 and date_time.isoweekday() == 1:
-            return 1
+        if date_time.month == 12:
+            if date_time.day == 25 and date_time.isoweekday() not in (6, 7):
+                return 1
+            elif date_time.day == 24 and date_time.isoweekday() == 5:
+                return 1
+            elif date_time.day == 26 and date_time.isoweekday() == 1:
+                return 1
         return 0
 
     # Whole week before Christmas day: Dec 18th to Dec Dec 24th
     @staticmethod
     def is_christmas_week_before(date_time):
-        if date_time.month == 12 and 18 <= date_time.day < 25:
-            return 1
-        return 0
+        return 1 if date_time.month == 12 and 18 <= date_time.day < 25 else 0
 
     # Whole week after Christmas day: Dec 26th to next year's Jan 1st
     @staticmethod
     def is_christmas_week_after(date_time):
-        if (date_time.month == 12 and 25 < date_time.day) or (date_time.month == 1 and date_time.day == 1):
+        if (
+            date_time.month == 12
+            and date_time.day > 25
+            or (date_time.month == 1 and date_time.day == 1)
+        ):
             return 1
         return 0

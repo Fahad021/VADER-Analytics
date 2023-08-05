@@ -39,9 +39,8 @@ class AdaptiveLinear:
             if bestScore > score:
                 bestScore = score
                 bestLag = lag
-        X = xLoad[:, -bestLag:]
         self.firstFit = True
-        return X
+        return xLoad[:, -bestLag:]
 
     def fit(self, X, y, val_ratio=0.0):
         self.model.fit(X, y.ravel())

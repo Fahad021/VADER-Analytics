@@ -24,11 +24,7 @@ def removeValues(data, percentage, inplace = False):
 
     """
 
-    if inplace:
-        dataRemoved = data
-    else:
-        dataRemoved = data.copy()
-
+    dataRemoved = data if inplace else data.copy()
     numRows, numCols = data.shape
     for i in range(numCols):
         for j in range(numRows):
@@ -53,11 +49,7 @@ def removeRows(data, rowPercentage, colPercentage = 1, inplace = False):
         dataRemoved: the corresponding data with the corresponding values removed
     """
 
-    if inplace:
-        dataRemoved = data
-    else:
-        dataRemoved = data.copy()
-
+    dataRemoved = data if inplace else data.copy()
     numRows, numCols = data.shape
     for j in range(numRows):
         if np.random.uniform() < rowPercentage:
@@ -89,12 +81,7 @@ def nonNullIntersection(dataList):
     for mask in masks[1:]:
         finalMask = finalMask & mask
 
-    dataListIntersection = []
-
-    for x in range(len(dataList)):
-        dataListIntersection.append(dataList[x][finalMask])
-
-    return dataListIntersection
+    return [dataList[x][finalMask] for x in range(len(dataList))]
 
 def fillValuesMLPFForward(p, q, v, a, max_iter = 1e3, C_set = [1], eps_set = [1e-3]):
     """
@@ -149,7 +136,7 @@ def fillValuesMLPFForward(p, q, v, a, max_iter = 1e3, C_set = [1], eps_set = [1e
 
     for j in range(num_samples):
         if np.isnan(np.sum(power[j]))and not np.isnan(np.sum(voltage[j])):
-            vj = voltage[j][0:30]
+            vj = voltage[j][:30]
             aj = voltage[j][30:]
             u = vj * np.cos(aj)  # Make sure a is in radians
             w = vj * np.sin(aj)
@@ -290,7 +277,7 @@ def fillValuesLRForward(p, q, v, a):
 
     for j in range(num_samples):
         if np.isnan(np.sum(power[j])) and not np.isnan(np.sum(voltage[j])):
-            vj = voltage[j][0:30]
+            vj = voltage[j][:30]
             aj = voltage[j][30:]
             u = vj * np.cos(aj)  # Make sure a is in radians
             w = vj * np.sin(aj)

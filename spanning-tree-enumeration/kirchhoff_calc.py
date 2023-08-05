@@ -38,13 +38,11 @@ def kirchhoff(G):
     
     matrix=laplacian(G)
 
-    matrix=np.delete(matrix,(0),0)    
+    matrix=np.delete(matrix,(0),0)
     matrix=np.delete(matrix,(0),1)  
-    
+
     # print matrix
 
     num_span=1
-    
-    num_span = np.linalg.det(matrix)
 
-    return num_span
+    return np.linalg.det(matrix)

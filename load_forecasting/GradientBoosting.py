@@ -67,7 +67,7 @@ class GradientBoosting:
         XVal = X[-nVal:,:]
         yTrain = y[:nVal]
         XTrain = X[:nVal,:]
-        for i,n in enumerate(n_estimators):
+        for n in n_estimators:
             self.model = GradientBoostingRegressor(loss='ls',n_estimators=n)
             self.model.fit(XTrain,yTrain.ravel())
             y_val=self.model.predict(XVal)

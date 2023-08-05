@@ -42,8 +42,6 @@ def decompress(BLOCKSIZE, ORGANIZED_EDGES):
 # Output:      data     = object to store file contents
 def load(filename):
 
-    fileObject   = open(filename,'rb+')           
-    data = pickle.load(fileObject) 
-    fileObject.close()
-
-    return data
+	with open(filename,'rb+') as fileObject:
+		data = pickle.load(fileObject)
+	return data

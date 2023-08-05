@@ -104,11 +104,7 @@ class InverseMLPF(object):
         self.p = np.copy(p)
         self.q = np.copy(q)
         self.v = np.copy(v)
-        if a is None:
-            self.a = np.zeros(np.shape(v))
-        else:
-            self.a = np.deg2rad(np.copy(a))  # Output of pandapower is in degrees
-
+        self.a = np.zeros(np.shape(v)) if a is None else np.deg2rad(np.copy(a))
         # Joined p and q for output
         pq = np.zeros((num_samples, 2 * num_bus))
         pq[:, np.arange(0, num_bus)] = p

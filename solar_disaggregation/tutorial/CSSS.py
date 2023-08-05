@@ -26,12 +26,7 @@ class CSSS:
             name = str(self.modelcounter)
 
         ## Instantiate a dictionary of model terms
-        model = {}
-        model['name']  = name
-        model['alpha'] = alpha
-        model['lb']    = lb
-        model['ub']    = ub
-
+        model = {'name': name, 'alpha': alpha, 'lb': lb, 'ub': ub}
         ## Check regressor shape
         regressor = np.array(regressor)
         if regressor.ndim == 0: ## If no regressors are included, set them an empty array
@@ -87,7 +82,7 @@ class CSSS:
                 residuals = (model['source'] - model['regressor'] * model['theta'])
                 modelObj =  cvp.norm( cvp.mul_elemwise( model['alpha'] , residuals ) ,2)
             else:
-                raise ValueError('{} wrong option, use "sse","l2" or "l1"'.format(costFunction))
+                raise ValueError(f'{costFunction} wrong option, use "sse","l2" or "l1"')
             ## Define cost function to regularize theta ****************
             # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
             # Check that beta is scalar or of length of number of parameters.
@@ -95,28 +90,29 @@ class CSSS:
             if model['beta'].size not in [1, model['order']]:
                 raise ValueError('Beta must be scalar or vector with one element for each regressor')
 
-            if model['regularizeTheta'] is not None:
-                if callable(model['regularizeTheta']):
+            if model['regularizeTheta'] is None:
+                regThetaObj = 0
+
+            elif callable(model['regularizeTheta']):
                     ## User can input their own function to regularize theta.
                     # Must input a cvxpy variable vector and output a scalar
                     # or a vector with one element for each parameter.
 
                     ## TODO: TRY CATCH TO ENSURE regularizeTheta WORKS AND RETURNS SCALAR
-                    try:
-                        regThetaObj = model['regularizeTheta'](model['theta']) * model['beta']
-                    except:
-                        raise ValueError('Check custom regularizer for model {}'.format(model['name']))
-                    if regThetaObj.size[0]* regThetaObj.size[1] != 1:
-                        raise ValueError('Check custom regularizer for model {}, make sure it returns a scalar'.format(model['name']))
+                try:
+                    regThetaObj = model['regularizeTheta'](model['theta']) * model['beta']
+                except:
+                    raise ValueError(f"Check custom regularizer for model {model['name']}")
+                if regThetaObj.size[0]* regThetaObj.size[1] != 1:
+                    raise ValueError(
+                        f"Check custom regularizer for model {model['name']}, make sure it returns a scalar"
+                    )
 
-                elif model['regularizeTheta'].lower() == 'l2':
-                    ## Sum square errors.
-                    regThetaObj = cvp.norm(model['theta'] * model['beta'])
-                elif model['regularizeTheta'].lower() == 'l1':
-                    regThetaObj = cvp.norm(model['theta'] * model['beta'], 1)
-            else:
-                regThetaObj = 0
-
+            elif model['regularizeTheta'].lower() == 'l2':
+                ## Sum square errors.
+                regThetaObj = cvp.norm(model['theta'] * model['beta'])
+            elif model['regularizeTheta'].lower() == 'l1':
+                regThetaObj = cvp.norm(model['theta'] * model['beta'], 1)
             ## Define cost function to regularize source signal ****************
             # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
             # Check that gamma is scalar
@@ -125,19 +121,18 @@ class CSSS:
                 raise NameError('Gamma must be scalar')
 
             ## Calculate regularization.
-            if model['regularizeSource'] is not None:
-                if callable(model['regularizeSource']):
-                    ## User can input their own function to regularize the source signal.
-                    # Must input a cvxpy variable vector and output a scalar.
-                    regSourceObj = model['regularizeSource'](model['source']) * model['gamma']
-                elif model['regularizeSource'].lower() == 'diff1_ss':
-                    regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * model['gamma']
-                else:
-                    raise Exception('regularizeSource must be a callable method, \`diff1_ss\`, or None')
-            else:
+            if model['regularizeSource'] is None:
                 regSourceObj = 0
 
 
+            elif callable(model['regularizeSource']):
+                ## User can input their own function to regularize the source signal.
+                # Must input a cvxpy variable vector and output a scalar.
+                regSourceObj = model['regularizeSource'](model['source']) * model['gamma']
+            elif model['regularizeSource'].lower() == 'diff1_ss':
+                regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * model['gamma']
+            else:
+                raise Exception('regularizeSource must be a callable method, \`diff1_ss\`, or None')
             ## Sum total model objective
             model['obj'] = modelObj + regThetaObj + regSourceObj
 

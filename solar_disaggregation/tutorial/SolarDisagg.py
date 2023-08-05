@@ -25,11 +25,7 @@ class SolarDisagg_IndvHome(CSSS.CSSS):
 
         ## If no names are input, create names based on id in vector.
         self.N, self.M = netloads.shape
-        if names is None:
-            self.names = [str(i) for i in np.arange(self.M)]
-        else:
-            self.names = names
-
+        self.names = [str(i) for i in np.arange(self.M)] if names is None else names
         ## Store net loads as a dictionary
         self.netloads = {}
         for i in range(self.M):
@@ -78,7 +74,7 @@ class SolarDisagg_IndvHome(CSSS.CSSS):
 
         ## Check that true value is correct number of dimensions
         trueValue = trueValue.squeeze()
-        if not (trueValue.shape == (self.N,)):
+        if trueValue.shape != (self.N,):
             raise Exception('True value of a solar or load signal must be one dimensional and length N = %d' % self.N)
 
         if name not in (self.names + ['AggregateLoad']):
@@ -129,7 +125,7 @@ class SolarDisagg_IndvHome(CSSS.CSSS):
             df.loc[name,'MAPE'] = MAPE_mod(est,truth,thrs=0.001)
             df.loc[name,'max_sol_pred'] = np.max(np.abs(est))
 
-            if not (df.loc[name,'mean'] == 0):
+            if df.loc[name, 'mean'] != 0:
                 df.loc[name,'cv']   = df.loc[name,'rmse'] / np.mean(truth)
                 df.loc[name,'pmae'] = df.loc[name,'mae']  / np.mean(truth)
                 df.loc[name,'mae_max']  =  df.loc[name,'mae']/ np.max(np.abs(truth))
@@ -450,7 +446,7 @@ class SolarDisagg_IndvHome_Realtime(CSSS.CSSS):
 
         ## Check that true value is correct number of dimensions
         trueValue = trueValue.squeeze()
-        if not (trueValue.shape == (self.N,)):
+        if trueValue.shape != (self.N,):
             raise Exception('True value of a solar or load signal must be one dimensional and length N = %d' % self.N)
 
         if name not in (self.names + ['AggregateLoad']):
@@ -491,7 +487,7 @@ class SolarDisagg_IndvHome_Realtime(CSSS.CSSS):
             df.loc[name,'mean'] = np.mean((truth))
             df.loc[name,'rmse'] = np.sqrt(np.mean((truth-est)**2))
             df.loc[name,'mae']  = np.mean(np.abs((truth-est)))
-            if not (df.loc[name,'mean'] == 0):
+            if df.loc[name, 'mean'] != 0:
                 df.loc[name,'cv']   = df.loc[name,'rmse'] / np.mean(truth)
                 df.loc[name,'pmae'] = df.loc[name,'mae']  / np.mean(truth)
 
@@ -521,21 +517,18 @@ def createTempInput(temp, size, minTemp=None, maxTemp=None, intercept=False):
 
     rangeCount = int((maxBound - minBound) / size)
     result = np.zeros((len(temp), rangeCount + intercept))
-    t = 0
-    for elem in temp:
+    for t, elem in enumerate(temp):
         fullRanges = min(int(np.floor((elem - minBound) / size)), rangeCount - 1)
         fullRanges = max(0, fullRanges)
         bound = (minBound + fullRanges * size)
         lastRange = elem - bound
-        res = [size for elem in range(fullRanges)]
+        res = [size for _ in range(fullRanges)]
         res.append(lastRange)
-        for var in range(rangeCount - fullRanges - 1):
-            res.append(0)
+        res.extend(0 for _ in range(rangeCount - fullRanges - 1))
         if intercept:
             res.append(1)  ## Include an intercept
 
         result[t, :] = np.array(res)
-        t += 1
     return minTemp, maxTemp, result
 
 
@@ -573,15 +566,13 @@ def createSolarDisaggIndvInputs(data, home_ids, solar_proxy_ids):
     hod = np.array(pd.get_dummies(hod))
     Tmin, Tmax, temp_regress = createTempInput(df['temperature'].values.squeeze(), 10)
 
-    data_out = {
-        'netloads':         netloads,
-        'solarregressors':  solarproxy,
-        'loadregressors':   np.hstack((hod, temp_regress)),
+    return {
+        'netloads': netloads,
+        'solarregressors': solarproxy,
+        'loadregressors': np.hstack((hod, temp_regress)),
         'tuningregressors': hod,
-        'names':            home_ids
+        'names': home_ids,
     }
-
-    return data_out
 
 
 ## Function for a cyclic convolution filter, because apparantely there isn't one already in python
@@ -602,14 +593,10 @@ def convolve_cyc(x, filt, left = True):
     return(x)
 
 def MAPE_mod(predicted,actual,thrs = None):
-    # 0<thrs<1 : thrs consider there is no error if the absolute difference predicted Vs actual <= than thrs*abs(max(actual))
+    if not thrs:
+        return np.mean(np.abs(actual-predicted)/np.abs(actual))
 
-    if thrs:
-        posinds = np.abs(actual-predicted) >= thrs*np.max(np.abs(actual))
-        predicted_m = predicted[posinds]
-        actual_m = actual[posinds]
-        error = np.sum(np.abs(actual_m-predicted_m)/np.abs(actual_m))/len(actual)
-    else:
-        error = np.mean(np.abs(actual-predicted)/np.abs(actual))
-
-    return error
+    posinds = np.abs(actual-predicted) >= thrs*np.max(np.abs(actual))
+    predicted_m = predicted[posinds]
+    actual_m = actual[posinds]
+    return np.sum(np.abs(actual_m-predicted_m)/np.abs(actual_m))/len(actual)
